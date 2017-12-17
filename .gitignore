@@ -5,6 +5,7 @@
 **/.springBeans
 **/bin
 **/build
+**/out
 .DS_Store
 .idea
 .gradle

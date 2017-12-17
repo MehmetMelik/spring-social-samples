@@ -18,6 +18,35 @@ Once you have registered the application, you'll need to edit src/main/resources
 
 Step 3: Run the application
 ---------------------------
+
+### Development
+
+Create and run a docker container for mysql:
+```
+docker run --name status-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=pa55word -d mysql:latest
+```
+
+If you have created mysql docker container previously, and want to start it:
+```
+docker start status-mysql
+```
+
+If you have any issue with flyway, install flyway via homebrew:
+```
+brew install flyway
+```
+and run 
+```
+flyway clean
+```
+
+### IDE Setup
+
+1. Install IntelliJ "Lombok Plugin": Search for "Lombok Plugin" in Preferences/Plugins 
+2. Enable Annotation Processing: Search for "Annotation Processing" in IntelliJ Preferences
+
+### Building & Run
+
 To run, simply import the project into your IDE and deploy to a Servlet 2.5 or > container such as Tomcat 6 or 7.
 Access the project at http://localhost:8080/api
 
