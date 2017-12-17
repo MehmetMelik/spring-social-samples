@@ -24,19 +24,20 @@
 			<form th:action="@{/twitter/search}" method="get">
 				<p><input type="text" name="query" th:value="${param.query}" /> <input type="submit" value="Search"/></p>
 			</form>
-			
-			<ul class="choices">
-				<li><a th:href="@{/twitter/timeline} + '/Home'">Home Timeline</a></li>
-				<li><a th:href="@{/twitter/timeline} + '/User'">User Timeline</a></li>
-				<li><a th:href="@{/twitter/timeline} + '/Mentions'">Mentions</a></li>
-				<li><a th:href="@{/twitter/timeline} + '/Favorites'">Favorites</a></li>
+			<nav class="navbar navbar-expand-sm bg-light navbar-light">
+			<ul class="navbar-nav">
+				<li class="nav-item"><a class="nav-link" th:href="@{/twitter/timeline} + '/Home'">Home Timeline</a></li>
+				<li class="nav-item"><a class="nav-link" th:href="@{/twitter/timeline} + '/User'">User Timeline</a></li>
+				<li class="nav-item"><a class="nav-link" th:href="@{/twitter/timeline} + '/Mentions'">Mentions</a></li>
+				<li class="nav-item"><a class="nav-link" th:href="@{/twitter/timeline} + '/Favorites'">Favorites</a></li>
 			</ul>
+			</nav>
 			
 			<div class="feed">
-			<ul class="imagedList">
-				<li class="imagedItem" th:each="tweet : ${timeline}">
+			<ul class="list-group">
+				<li class="list-group-item" th:each="tweet : ${timeline}">
 					<div class="image" th:if="${!#strings.isEmpty(tweet.profileImageUrl)}">
-						<img th:src="${tweet.profileImageUrl}" align="left"/>
+						<img th:src="${tweet.profileImageUrl}" class="rounded-circle" align="left"/>
 					</div>
 					<div class="content">
 					<strong><a th:href="'http://twitter.com/' + ${tweet.fromUser}" th:text="${tweet.fromUser}">from user</a></strong><br/>

@@ -14,10 +14,10 @@
 		<div id="content" layout:fragment="content">
 			<h3>Your Twitter Friends</h3>
 			
-			<ul class="imagedList">
-				<li class="imagedItem" th:each="profile : ${profiles}">
-					<img th:src="${profile.profileImageUrl}" width="48" height="48"/>
-					<a th:href="'http://twitter.com/' + ${profile.screenName}" th:text="${profile.screenName}">screen name</a>
+			<ul class="list-group">
+				<li class="list-group-item" th:each="profile : ${profiles}">
+					<img th:src="${profile.profileImageUrl}" class="rounded-circle" width="48" height="48"/>
+					<a class="nav-link" th:href="'http://twitter.com/' + ${profile.screenName}" th:text="${profile.screenName}">screen name</a>
 				</li>
 			</ul>
 		</div>

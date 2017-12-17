@@ -15,7 +15,7 @@
 			<h3>Your Twitter Profile</h3>
 			
 			<p>Hello, <span th:text="${profile.name}">name</span>!</p>
-			<img th:src="${profile.profileImageUrl}"/>
+			<img th:src="${profile.profileImageUrl}" class="rounded-circle"/>
 			<dl>
 				<dt>Twitter ID:</dt>
 				<dd th:text="${profile.id}">profile id</dd>
