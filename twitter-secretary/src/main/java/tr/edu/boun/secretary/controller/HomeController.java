@@ -27,19 +27,17 @@ import java.security.Principal;
 @Controller
 public class HomeController {
 
-	private final UsersConnectionRepository usersConnectionRepository;
 
 	private final AccountRepository accountRepository;
 
 	@Autowired
-	public HomeController(UsersConnectionRepository usersConnectionRepository, AccountRepository accountRepository) {
-		this.usersConnectionRepository = usersConnectionRepository;
+	public HomeController( AccountRepository accountRepository) {
+
 		this.accountRepository = accountRepository;
 	}
 
 	@RequestMapping("/")
 	public String home(Principal currentUser, Model model) {
-		//model.addAttribute("connectionsToProviders", usersConnectionRepository.findUserIdsWithConnection());
 		if (currentUser != null) {
 			model.addAttribute(accountRepository.findByUsername(currentUser.getName()));
 		}

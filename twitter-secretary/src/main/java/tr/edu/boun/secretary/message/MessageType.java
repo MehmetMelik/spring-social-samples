@@ -44,7 +44,7 @@ public enum MessageType {
 	
 	private final String cssClass;
 	
-	private MessageType() {
+	MessageType() {
 		cssClass = name().toLowerCase(); 
 	}
 	
