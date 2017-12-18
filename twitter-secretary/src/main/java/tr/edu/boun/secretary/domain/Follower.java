@@ -25,4 +25,6 @@ public class Follower {
     private Long userId;
 
     private Long followerId;
+
+    private Boolean active;
 }

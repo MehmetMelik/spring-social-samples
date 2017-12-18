@@ -13,6 +13,15 @@ import java.util.Set;
 public interface FollowerRepository extends JpaRepository<Follower, Integer> {
 
     List<Follower> findByUserId(Long userId);
+    List<Follower> findByUserIdAndActive(Long userId, Boolean active);
 
     List<Follower> findByUserIdAndFollowerIdIn(Long userId, Collection<Long> followerIds);
+
+    Follower findByUserIdAndFollowerIdAndActive(Long userId, Long followerId, Boolean active);
+
+    Follower findByUserIdAndFollowerId(Long userId, Long followerId);
+
+    List<Follower> findByActive(Boolean active);
+
+    void deleteByFollowerId(Long followerId);
 }

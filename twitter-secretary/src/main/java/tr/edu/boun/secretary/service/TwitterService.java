@@ -9,12 +9,16 @@ import tr.edu.boun.secretary.repository.FollowerRepository;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
+@Transactional
 public class TwitterService {
 
     private final Twitter twitter;
@@ -29,31 +33,46 @@ public class TwitterService {
 
     public List<TwitterProfile> getUnfollowers() {
         Long profileId = twitter.userOperations().getProfileId();
-        CursoredList<Long> cursoredList = twitter.friendOperations().getFollowerIds();
-        List<Follower> followers = followerRepository.findByUserId(profileId);
+        CursoredList<Long> followerIds = twitter.friendOperations().getFollowerIds();
+        List<Follower> followers = followerRepository.findByUserIdAndActive(profileId, true);
         List<Long> unfollowers = followers.stream()
-                .filter(follower -> !cursoredList.contains(follower.getFollowerId()))
+                .filter(follower -> !followerIds.contains(follower.getFollowerId()))
                 .map(Follower::getFollowerId)
-                .collect(Collectors.toList());
-        saveNewFollowers(profileId, cursoredList, followers);
-        deleteUnfollowers(profileId, unfollowers);
-        return getProfiles(new ArrayList<>(unfollowers));
+                .collect(toList());
+        saveNewFollowers(profileId, followerIds, followers);
+        deactivate(profileId, unfollowers);
+        return getProfiles(new ArrayList<>(followerRepository.findByUserIdAndActive(profileId, false).stream()
+                .map(Follower::getFollowerId).collect(Collectors.toList())));
     }
 
     private void saveNewFollowers(Long profileId, CursoredList<Long> currentFollowers, List<Follower> followers) {
-        List<Long> followerIds = followers.stream().map(Follower::getFollowerId).collect(Collectors.toList());
-        currentFollowers.stream().filter(id -> !followerIds.contains(id))
-                .forEach(currentFollower -> {
-                    Follower follower = Follower.builder().userId(profileId)
-                            .followerId(currentFollower)
-                            .build();
-                    followerRepository.save(follower);
-                } );
+
+        List<Follower> deactiveFollowers = followerRepository.findByUserIdAndActive(profileId, false);
+
+        //List<Follower> reactivatedFollowers =
+        deactiveFollowers.stream()
+                .filter(deactiveFollower -> currentFollowers.contains(deactiveFollower.getFollowerId()))
+                .forEach(deactiveFollower -> {
+                    currentFollowers.remove(deactiveFollower.getFollowerId());
+                    deactiveFollower.setActive(true);
+                    followerRepository.save(deactiveFollower);
+                });
+                //.collect(Collectors.toList());
+        //followerRepository.save(reactivatedFollowers);
+
+        List<Long> followerIds = followers.stream().map(Follower::getFollowerId).collect(toList());
+        List<Follower> newFollowers = currentFollowers.stream().filter(id -> !followerIds.contains(id))
+                .map(currentFollower -> Follower.builder().userId(profileId)
+                       .followerId(currentFollower)
+                       .active(true)
+                       .build()).collect(toList());
+        followerRepository.save(newFollowers);
     }
 
-    private void deleteUnfollowers(Long profileId, List<Long> unfollowers) {
+    private void deactivate(Long profileId, List<Long> unfollowers) {
         List<Follower> followers = followerRepository.findByUserIdAndFollowerIdIn(profileId, unfollowers);
-        followerRepository.delete(followers);
+        followers.forEach(follower -> follower.setActive(false));
+        followerRepository.save(followers);
     }
 
     public List<TwitterProfile> getAllFriends() {
@@ -63,12 +82,41 @@ public class TwitterService {
     }
 
     public List<TwitterProfile> getAllFollowers() {
-        CursoredList<Long> cursoredList;
-        cursoredList = twitter.friendOperations().getFollowerIds();
-        return getProfiles(new ArrayList<>(cursoredList));
+        List<Long> existingFollowers = followerRepository.findByActive(true).stream()
+                .map(Follower::getFollowerId).collect(toList());
+        Long profileId = twitter.userOperations().getProfileId();
+        CursoredList<Long> currentFollowers;
+        currentFollowers = twitter.friendOperations().getFollowerIds();
+        List<Follower> followers = new ArrayList<>();
+        currentFollowers.forEach(item -> {
+            Follower existingFollower = followerRepository.findByUserIdAndFollowerId(profileId, item);
+            if(existingFollower == null) {
+                Follower follower = Follower.builder().userId(profileId)
+                        .followerId(item)
+                        .active(true)
+                        .build();
+                followers.add(follower);
+            } else if (!existingFollower.getActive()) {
+                existingFollower.setActive(true);
+                followers.add(existingFollower);
+            }
+        });
+
+        List<Long> unfollowerIds = existingFollowers.stream()
+                .filter(existingFollower -> !currentFollowers.contains(existingFollower)).collect(toList());
+        List<Follower> unfollowers = unfollowerIds.stream().map(id -> {
+            Follower follower = followerRepository.findByUserIdAndFollowerIdAndActive(profileId, id, true);
+            follower.setActive(false);
+            return follower;
+        }).collect(toList());
+        followers.addAll(unfollowers);
+        followerRepository.save(followers);
+        return getProfiles(new ArrayList<>(currentFollowers));
     }
 
     private List<TwitterProfile> getProfiles(ArrayList<Long> cursoredList) {
+        if(cursoredList.isEmpty())
+            return new ArrayList<>();
         List<TwitterProfile> followers = new ArrayList<>();
         for(int i = 0; i< cursoredList.size(); i+=100){
             followers.addAll(getProfiles(cursoredList, i));
